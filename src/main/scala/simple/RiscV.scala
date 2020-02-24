@@ -47,25 +47,52 @@ class EX extends Module {
   io.if_EXtoWB.valid :=  io.if_IDtoEX.valid
 }
 
-class RF extends Module {
+class RF(DEBUG_INFO_EN:Int = 1) extends Module {
   val io = IO(new Bundle {
     var if_RFtoEX = new IF_RFtoEX
     var if_WBtoRF = Flipped(new IF_WBtoRF)
     var if_IDtoRF = Flipped(new IF_IDtoRF)
+    // Debug Port
+    // var info_rf = if(DEBUG_INFO_EN==1) Output(Vec(4, UInt(32.W))) else None
+    var info_rf = Output(Vec(32, UInt(32.W)))
   })
-  io.if_RFtoEX.d_rd  := 0x0000.U
-  io.if_RFtoEX.d_rs1 := 0x1111.U
-  io.if_RFtoEX.d_rs2 := 0x2222.U
+  val r_RegFile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
+
+  io.info_rf := r_RegFile
+//  val info_rf = Wire(Vec(32, UInt(32.W)))
+//  if(DEBUG_INFO_EN==1){
+//    info_rf := r_RegFile
+//    io.info_rf := info_rf
+//  }
+
+  var rd     = io.if_IDtoRF.rd
+  var rs1    = io.if_IDtoRF.rs1
+  var rs2    = io.if_IDtoRF.rs2
+
+  var wvalid = io.if_WBtoRF.valid
+  var wdata  = io.if_WBtoRF.wdata
+  var w_rd   = io.if_WBtoRF.rd
+
+  io.if_RFtoEX.d_rd  := r_RegFile(rd )
+  io.if_RFtoEX.d_rs1 := r_RegFile(rs1)
+  io.if_RFtoEX.d_rs2 := r_RegFile(rs2)
+
+  when(wvalid===1.U){
+    r_RegFile(w_rd) := wdata
+  }
 }
 
 class WB extends Module {
   val io = IO(new Bundle {
     var if_EXtoWB = Flipped(new IF_EXtoWB)
     var if_WBtoRF = new IF_WBtoRF
+    val ready     = Output(UInt( 1.W))
   })
   io.if_WBtoRF.rd    := 1.U
   io.if_WBtoRF.wdata := 0x1234.U
   io.if_WBtoRF.valid :=  io.if_EXtoWB.valid
+
+  io.ready           :=  io.if_EXtoWB.valid
 }
 
 class RiscV extends Module {
@@ -73,6 +100,9 @@ class RiscV extends Module {
     val inst_code     = Input (UInt(32.W))
     val inst_valid    = Input (UInt(1.W))
     val inst_ready     = Output(UInt(1.W))
+
+    // Debug Port
+    var info_rf = Output(Vec(32, UInt(32.W)))
   })
 
   // Use shorter variable names
@@ -103,7 +133,10 @@ class RiscV extends Module {
   i_rf.io.if_WBtoRF := i_wb.io.if_WBtoRF
 
   // Output
-  io.inst_ready  := 1.U
+  io.inst_ready  := i_wb.io.ready
+
+  // Debug Output
+  io.info_rf := i_rf.io.info_rf
 }
 
 // Generate the Verilog code by invoking the Driver

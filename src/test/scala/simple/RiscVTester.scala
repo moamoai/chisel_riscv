@@ -13,13 +13,14 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     poke(dut.io.inst_valid, 1.U)
     poke(dut.io.inst_code , inst_code)
     step(1)
-    poke(dut.io.inst_valid, 0.U)
 
     var ready = peek(dut.io.inst_ready)
     while (ready == 0){
       step(1)
       ready = peek(dut.io.inst_ready)
     }
+    poke(dut.io.inst_valid, 0.U)
+    step(1)
     return 0;
   }
 
