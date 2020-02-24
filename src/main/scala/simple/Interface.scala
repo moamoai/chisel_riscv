@@ -28,3 +28,7 @@ class IF_EXtoWB  extends Bundle {
   val d_alu      = Output(UInt(32.W))
   val d_ld       = Output(UInt(32.W))
 }
+class IF_WBtoRF  extends Bundle {
+  val rd         = Output(UInt( 5.W))
+  val wdata      = Output(UInt(32.W))
+}

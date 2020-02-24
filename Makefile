@@ -18,7 +18,7 @@ riscv-test:
 GTKWAVE = /Applications/gtkwave.app/Contents/Resources/bin/gtkwave
 
 view:
-	$(GTKWAVE) ./test_run_dir/simple.Axi4LiteSlaveTester1484209783/Axi4LiteSlave.vcd
+	$(GTKWAVE) ./test_run_dir/simple.RiscVTester1912282511/RiscV.gtkw
 
 # clean everything (including IntelliJ project settings)
 

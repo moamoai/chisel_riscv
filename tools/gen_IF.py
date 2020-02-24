@@ -5,7 +5,7 @@ state = ""
 
 IFName_List = [] # [[IFName,SignalList] , ..]
 Signal_List = [] # [[valid,width],[ready,1],...]
-for line in open("./interface.txt"):
+for line in open("./tools/interface.txt"):
   line = line.rstrip()
   line = line.split("	")
   if(line[0]!=""):
@@ -21,6 +21,7 @@ for line in open("./interface.txt"):
     Signal = line[1]
     Width  = line[2]
     Signal_List.append([Signal, Width])
+IFName_List.append([IFName, Signal_List])
 
 print(IFName_List)    
 
