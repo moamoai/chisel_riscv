@@ -28,6 +28,7 @@ class ID extends Module {
   io.if_IDtoEX.ldst_func := 2.U
   io.if_IDtoEX.imm       := 3.U
   io.if_IDtoEX.rd        := 4.U
+  io.if_IDtoEX.valid     :=  io.if_IFtoID.valid
 
   io.if_IDtoRF.rd        := 5.U
   io.if_IDtoRF.rs1       := 6.U
@@ -43,6 +44,7 @@ class EX extends Module {
   io.if_EXtoWB.rd    := 0.U
   io.if_EXtoWB.d_alu := 0.U
   io.if_EXtoWB.d_ld  := 0.U
+  io.if_EXtoWB.valid :=  io.if_IDtoEX.valid
 }
 
 class RF extends Module {
@@ -63,6 +65,7 @@ class WB extends Module {
   })
   io.if_WBtoRF.rd    := 1.U
   io.if_WBtoRF.wdata := 0x1234.U
+  io.if_WBtoRF.valid :=  io.if_EXtoWB.valid
 }
 
 class RiscV extends Module {
