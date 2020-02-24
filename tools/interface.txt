@@ -1,0 +1,17 @@
+IF_IFtoID	opcode	32
+	valid	1
+IF_IDtoRF	rd	5
+	rs1	5
+	rs2	5
+IF_IDtoEX	alu_func	6
+	ldst_func	6
+	imm	12
+	rd	5
+IF_RFtoEX	d_rd	32
+	d_rs1	32
+	d_rs2	32
+IF_EXtoWB	rd	5
+	d_alu	32
+	d_ld	32
+IF_WBtoRF	rd	5
+	wdata	32
