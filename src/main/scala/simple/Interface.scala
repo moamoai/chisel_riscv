@@ -16,7 +16,7 @@ class IF_IDtoRF  extends Bundle {
 class IF_IDtoEX  extends Bundle {
   val alu_func   = Output(UInt( 6.W))
   val ldst_func  = Output(UInt( 6.W))
-  val imm        = Output(UInt(12.W))
+  val imm        = Output(UInt(32.W))
   val rd         = Output(UInt( 5.W))
   val valid      = Output(UInt( 1.W))
 }

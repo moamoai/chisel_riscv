@@ -23,6 +23,53 @@ class ID extends Module {
     var if_IDtoRF      = new IF_IDtoRF
   })
 
+  val inst_code = Wire(UInt(32.W))
+  inst_code := io.if_IFtoID.opcode
+
+  var opcode = inst_code(6,0)
+  var rd = inst_code(11,7)
+  var func3 = inst_code(14,12)
+  var rs1 = inst_code(19,15)
+  var rs2 = inst_code(24,20)
+  var func7 = inst_code(31,25)
+  var imm_I = inst_code(31,20)
+  // var imm_S = inst_code(7,7)
+  var imm_U = inst_code(31,12)
+  // var imm_J = inst_code(31,31)
+  var shamt = inst_code(24,20)
+
+  // opcode
+  val illigal_op   = Wire(Bool())
+  val lui_valid    = Wire(Bool())
+  val load_valid   = Wire(Bool())
+  val op_imm_valid = Wire(Bool())
+  val op_valid     = Wire(Bool())
+  val store_valid  = Wire(Bool())
+  illigal_op   := 0.U
+  lui_valid    := 0.U
+  load_valid   := 0.U
+  op_imm_valid := 0.U
+  op_valid     := 0.U
+  store_valid  := 0.U
+  when(opcode===0x03.U){
+    load_valid := 1.U
+  }.elsewhen(opcode===0x13.U){
+    op_imm_valid := 1.U
+  }.elsewhen(opcode===0x33.U){
+    op_valid := 1.U
+  }.elsewhen(opcode===0x23.U){
+    store_valid := 1.U
+  }.elsewhen(opcode===0x37.U){
+    lui_valid := 1.U
+  }.otherwise{
+    illigal_op := 1.U
+  }
+  // assert(illigal_op === 0x0.U, "[NG]Illigal OP!!")
+
+  // imm sel
+  val imm = Wire(UInt(32.W))
+  imm := 0.U
+
   // Output
   io.if_IDtoEX.alu_func  := 1.U
   io.if_IDtoEX.ldst_func := 2.U
