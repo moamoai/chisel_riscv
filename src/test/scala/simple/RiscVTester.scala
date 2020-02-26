@@ -36,21 +36,42 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     step(1)
     return 0;
   }
+
+  // Start Sim
+  poke(dut.io.start, 1.U)
+  step(1)
+  poke(dut.io.start, 0.U)
+  step(1)
   val filename = "inst.txt"
-  for (line <- Source.fromFile(filename).getLines) {
-      println(line)
-      // println(lines(0))
-      // println(lines(1))
-      // println(lines(2))
-      var lines = line.split(" ")
-      var inst_code = lines(0)
-      var reg_num   = Integer.parseInt(lines(1), 16)
-      var expect    = Integer.parseInt(lines(2), 16)
-      
-      var inst = Integer.parseInt(inst_code,16).U
-      // f_run_instruction(inst)
-      f_run_instruction_exp(inst, reg_num, expect)
-      step(1)
+  var line_list = Source.fromFile(filename).getLines.toList
+  // for (line <- line_list) {
+  var inst_addr = 0
+  var timer     = 5 // 10 cycle
+
+  while((timer>0)){
+    inst_addr = peek(dut.io.inst_addr).intValue()
+    var line = line_list(inst_addr)
+    println(line)
+    var lines = line.split(" ")
+    var inst_code = lines(0)
+    var inst      = Integer.parseInt(inst_code,16).U
+    var reg_num   = Integer.parseInt(lines(1), 16)
+    var expect    = Integer.parseInt(lines(2), 16)
+    // var EXP_ADDR  = Integer.parseInt(lines(3), 16) // cuurent PC
+    var EXP_ADDR  = Integer.parseInt(lines(4), 16) // Next PC
+
+    // f_run_instruction(inst)
+    f_run_instruction_exp(inst, reg_num, expect)
+    step(1)
+
+    // Next ADDR Check
+    inst_addr = peek(dut.io.inst_addr).intValue()
+    if((inst_addr*4)!=EXP_ADDR){
+       println(f"[NG] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
+       timer = 0
+    }
+
+    timer   = timer -1
   }
 
 

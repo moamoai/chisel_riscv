@@ -33,27 +33,44 @@ for line in open("../riscv_testpattern/run.log"):
       line.append("0")
       line.append("0")
       line.append("0x00000000")
-    elif((op == "(0x0040006f)")   # j pc + 0x4
-      |(op == "(0x0000006f)")): # j pc + 0x4
-      state = "get_inst"
-      continue
+    elif((op == "(0x0040006f)") # j pc + 0x4
+      |(op == "(0x00008067)")   #  ret
+      |(op == "(0x0000006f)")): # j pc + 0x0
+      # state = "get_inst"
+      # continue
+      line.append("0")
+      line.append("0")
+      line.append("0x00000000")
     elif(op=="(0x00532023)"): # Fin
       break
 
-    reg    = line[4]
-    expect = line[5]
+    regx = line[3]
+    if(len(regx)==3): # x10,x11..
+      reg    = regx[1:2]
+      expect = line[4]
+    else: # x 1, 
+      reg    = line[4]
+      expect = line[5]
     Inst_List.append([ADDR, opcode, [reg, expect], asm])
     state = "get_inst"
 
 file = open('./inst.txt', 'w')
 
 print(Inst_List)
-for Inst in Inst_List:
-  opcode = Inst[1].replace("0x","")
-  reg    = Inst[2][0]
-  expect = Inst[2][1].replace("0x","")
-  asm    = Inst[3]
-  inst = "{0} {1} {2} // {3}\n".format(opcode, reg, expect, asm)
+for i in range(len(Inst_List)):
+  Inst = Inst_List[i]
+  opcode    = Inst[1].replace("0x","")
+  reg       = Inst[2][0]
+  expect    = Inst[2][1].replace("0x","")
+  asm       = Inst[3]
+  ADDR      = Inst[0].replace("0x", "")
+
+  if(i!=len(Inst_List)-1):
+    Inst_Next = Inst_List[i+1]
+    NEXT_ADDR = Inst_Next[0].replace("0x", "")
+  else:
+    NEXT_ADDR = 0
+  inst = "{0} {1} {2} {3} {4} // {5}\n".format(opcode, reg, expect, ADDR, NEXT_ADDR, asm)
   file.writelines(inst)
   #print(inst)
 
