@@ -30,12 +30,12 @@ class Alu extends Module {
   result := 0.U
 
   // The ALU selection
-  switch(fn) {
-    is(OBJ_ALU_FUNC.Add) { result := a + b }
-    is(OBJ_ALU_FUNC.Sub) { result := a - b }
-    is(OBJ_ALU_FUNC.Or ) { result := a | b }
-    is(OBJ_ALU_FUNC.And) { result := a & b }
-  }
+//  switch(fn) {
+//    is(OBJ_ALU_FUNC.Add) { result := a + b }
+//    is(OBJ_ALU_FUNC.Sub) { result := a - b }
+//    is(OBJ_ALU_FUNC.Or ) { result := a | b }
+//    is(OBJ_ALU_FUNC.And) { result := a & b }
+//  }
 
   // Output on the LEDs
   io.result := result

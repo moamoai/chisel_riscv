@@ -34,10 +34,13 @@ class ID extends Module {
   var func7 = inst_code(31,25)
   var imm_I = inst_code(31,20)
   // var imm_S = inst_code(7,7)
-  var imm_U = inst_code(31,12)
+  var imm_U = (inst_code(31,12) << 12)
   // var imm_J = inst_code(31,31)
   var shamt = inst_code(24,20)
 
+  // imm sel
+  val imm = Wire(UInt(32.W))
+  imm := 0.U
   // opcode
   val illigal_op   = Wire(Bool())
   val lui_valid    = Wire(Bool())
@@ -51,35 +54,50 @@ class ID extends Module {
   op_imm_valid := 0.U
   op_valid     := 0.U
   store_valid  := 0.U
-  when(opcode===0x03.U){
-    load_valid := 1.U
-  }.elsewhen(opcode===0x13.U){
-    op_imm_valid := 1.U
-  }.elsewhen(opcode===0x33.U){
-    op_valid := 1.U
-  }.elsewhen(opcode===0x23.U){
-    store_valid := 1.U
-  }.elsewhen(opcode===0x37.U){
-    lui_valid := 1.U
-  }.otherwise{
-    illigal_op := 1.U
+  
+  val alu_func  = Wire(UInt(6.W))
+  val ldst_func = Wire(UInt(6.W))
+  alu_func  := 0.U
+  ldst_func := (load_valid << 5) + (store_valid << 4) + func3
+
+
+  // Decorder
+  when(io.if_IFtoID.valid === 1.U){
+    when(opcode===0x03.U){       //  LOAD/I-type
+      load_valid := 1.U
+      imm := imm_I
+    }.elsewhen(opcode===0x13.U){ // OP-IMM/I-type
+      op_imm_valid := 1.U
+      imm := imm_I
+      alu_func := func3
+    }.elsewhen(opcode===0x33.U){ // OP/R-type
+      op_valid := 1.U
+      imm := 0.U
+      alu_func := func3
+    }.elsewhen(opcode===0x23.U){ // STORE
+      store_valid := 1.U
+      imm := (inst_code(31,25)<<5) + inst_code(4,0)
+    }.elsewhen(opcode===0x37.U){ // LUI U-type
+      alu_func := OBJ_ALU_FUNC.SEL_B
+      lui_valid := 1.U
+      imm := imm_U
+    }.otherwise{
+      illigal_op := 1.U
+    }
   }
   // assert(illigal_op === 0x0.U, "[NG]Illigal OP!!")
 
-  // imm sel
-  val imm = Wire(UInt(32.W))
-  imm := 0.U
-
   // Output
-  io.if_IDtoEX.alu_func  := 1.U
-  io.if_IDtoEX.ldst_func := 2.U
-  io.if_IDtoEX.imm       := 3.U
-  io.if_IDtoEX.rd        := 4.U
-  io.if_IDtoEX.valid     :=  io.if_IFtoID.valid
-
-  io.if_IDtoRF.rd        := 5.U
-  io.if_IDtoRF.rs1       := 6.U
-  io.if_IDtoRF.rs2       := 7.U
+  io.if_IDtoEX.alu_func  := alu_func
+  io.if_IDtoEX.ldst_func := ldst_func
+  io.if_IDtoEX.imm       := imm
+  io.if_IDtoEX.imm_sel   := op_imm_valid | lui_valid
+  io.if_IDtoEX.rd        := rd
+  io.if_IDtoEX.valid     := op_valid | op_imm_valid | 
+                            load_valid | store_valid | lui_valid
+  io.if_IDtoRF.rd        := rd
+  io.if_IDtoRF.rs1       := rs1
+  io.if_IDtoRF.rs2       := rs2
 }
 
 class EX extends Module {
@@ -88,8 +106,32 @@ class EX extends Module {
     var if_RFtoEX = Flipped(new IF_RFtoEX)
     var if_EXtoWB = new IF_EXtoWB
   })
-  io.if_EXtoWB.rd    := 0.U
-  io.if_EXtoWB.d_alu := 0.U
+
+  var alu_func = io.if_IDtoEX.alu_func
+  var imm_sel  = io.if_IDtoEX.imm_sel
+  val alu_a    = Wire(UInt(32.W))
+  val alu_b    = Wire(UInt(32.W))
+  val o_alu    = Wire(UInt(32.W))
+  alu_a := io.if_RFtoEX.d_rs1
+  when(imm_sel === 1.U){
+    alu_b := io.if_IDtoEX.imm
+  }.otherwise{
+    alu_b := io.if_RFtoEX.d_rs2
+  }
+  o_alu := 0.U
+  // ALU
+  switch(alu_func(3,0)) {
+    is(OBJ_ALU_FUNC.ADD  ) { o_alu := alu_a + alu_b }
+    is(OBJ_ALU_FUNC.SUB  ) { o_alu := alu_a - alu_b }
+    is(OBJ_ALU_FUNC.XOR  ) { o_alu := alu_a ^ alu_b }
+    is(OBJ_ALU_FUNC.OR   ) { o_alu := alu_a | alu_b }
+    is(OBJ_ALU_FUNC.AND  ) { o_alu := alu_a & alu_b }
+    is(OBJ_ALU_FUNC.SEL_A) { o_alu := alu_a         }
+    is(OBJ_ALU_FUNC.SEL_B) { o_alu :=         alu_b }
+  }
+
+  io.if_EXtoWB.rd    := io.if_IDtoEX.rd
+  io.if_EXtoWB.d_alu := o_alu
   io.if_EXtoWB.d_ld  := 0.U
   io.if_EXtoWB.valid :=  io.if_IDtoEX.valid
 }
@@ -125,7 +167,9 @@ class RF(DEBUG_INFO_EN:Int = 1) extends Module {
   io.if_RFtoEX.d_rs2 := r_RegFile(rs2)
 
   when(wvalid===1.U){
-    r_RegFile(w_rd) := wdata
+    when(w_rd != 0.U){
+      r_RegFile(w_rd) := wdata
+    }
   }
 }
 
@@ -135,11 +179,10 @@ class WB extends Module {
     var if_WBtoRF = new IF_WBtoRF
     val ready     = Output(UInt( 1.W))
   })
-  io.if_WBtoRF.rd    := 1.U
-  io.if_WBtoRF.wdata := 0x1234.U
-  io.if_WBtoRF.valid :=  io.if_EXtoWB.valid
-
-  io.ready           :=  io.if_EXtoWB.valid
+  io.if_WBtoRF.rd    := io.if_EXtoWB.rd
+  io.if_WBtoRF.wdata := io.if_EXtoWB.d_alu
+  io.if_WBtoRF.valid := io.if_EXtoWB.valid
+  io.ready           := io.if_EXtoWB.valid
 }
 
 class RiscV extends Module {

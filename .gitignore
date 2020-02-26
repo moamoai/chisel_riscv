@@ -5,3 +5,4 @@ generated/*.json
 generated/*.fir
 *bat
 generated/*.v
+.metals/metals.log

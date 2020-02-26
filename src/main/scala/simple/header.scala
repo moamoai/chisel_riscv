@@ -3,20 +3,17 @@ package simple
 import chisel3._
 import chisel3.util._
 
-object OBJ_OPCODE {
-  val OP_Nop  = 0.U(4.W)
-  val OP_Load  = 1.U(4.W)
-  val OP_Store  = 2.U(4.W)
-  val OP_Add  = 3.U(4.W)
-  val OP_Sub  = 4.U(4.W)
-  val OP_Loadimm  = 5.U(4.W)
-}
-
 object OBJ_ALU_FUNC {
-  val Add = 0.U(2.W)
-  val Sub = 1.U(2.W)
-  val Or  = 2.U(2.W)
-  val And = 3.U(2.W)
+  val ADD  = 0.U(4.W)
+  val SUB  = 1.U(4.W)
+//  val   = 2.U(4.W)
+//  val   = 3.U(4.W)
+  val XOR  = 4.U(4.W)
+//  val   = 5.U(4.W)
+  val OR  = 6.U(4.W)
+  val AND  = 7.U(4.W)
+  val SEL_A  = 8.U(4.W)
+  val SEL_B  = 9.U(4.W)
 }
 
 object REG {
