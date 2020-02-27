@@ -14,27 +14,35 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
           reg_num   : Int,
           exp       : BigInt
     ) : Int = {
-    f_run_instruction(inst_code)
+    var result = 1 // 1:OK 0:NG
+    result &= f_run_instruction(inst_code)
     expect(dut.io.info_rf(reg_num), exp)
     var reg_val = peek(dut.io.info_rf(reg_num))
     println(f"reg_num[0x$reg_num%02x] reg_val[0x$reg_val%08x] exp[0x$exp%08x]");
-    return 0;
+    return result;
   }
   def f_run_instruction(
           inst_code : UInt
     ) : Int = {
+    var result = 1 // 1:OK 0:NG
     poke(dut.io.inst_valid, 1.U)
     poke(dut.io.inst_code , inst_code)
     step(1)
 
     var ready = peek(dut.io.inst_ready)
-    while (ready == 0){
-      step(1)
-      ready = peek(dut.io.inst_ready)
+    var error = peek(dut.io.error)
+    if(error == 1){
+      println("[NG] Error Assert")
+      result = 0
+    }else{
+      while (ready == 0){
+        step(1)
+        ready = peek(dut.io.inst_ready)
+      }
     }
     poke(dut.io.inst_valid, 0.U)
     step(1)
-    return 0;
+    return result;
   }
 
   // Start Sim
@@ -66,7 +74,10 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     // var EXP_ADDR  = Integer.parseInt(lines(4), 16) // Next PC
 
     // f_run_instruction(inst)
-    f_run_instruction_exp(inst.U, reg_num, expect)
+    if(f_run_instruction_exp(inst.U, reg_num, expect)!=1){
+      println("[NG] f_run_instruction_exp")
+      timer = 0
+    }
     step(1)
 
     // Next ADDR Check
