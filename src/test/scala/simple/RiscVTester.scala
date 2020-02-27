@@ -12,7 +12,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
   def f_run_instruction_exp(
           inst_code : UInt,
           reg_num   : Int,
-          exp       : Int
+          exp       : BigInt
     ) : Int = {
     f_run_instruction(inst_code)
     expect(dut.io.info_rf(reg_num), exp)
@@ -46,7 +46,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
   var line_list = Source.fromFile(filename).getLines.toList
   // for (line <- line_list) {
   var inst_addr = 0
-  var timer     = 5 // 10 cycle
+  var timer     = 10 // 10 cycle
 
   while((timer>0)){
     inst_addr = peek(dut.io.inst_addr).intValue()
@@ -54,14 +54,19 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     println(line)
     var lines = line.split(" ")
     var inst_code = lines(0)
-    var inst      = Integer.parseInt(inst_code,16).U
+    var inst      = BigInt(inst_code, 16)
+    // var reg_num   = BigInt(lines(1), 16)
+    var expect    = BigInt(lines(2), 16)
+    var EXP_ADDR  = BigInt(lines(4), 16) // Next PC
+
+    // var inst      = Integer.parseInt(inst_code,16).U
     var reg_num   = Integer.parseInt(lines(1), 16)
-    var expect    = Integer.parseInt(lines(2), 16)
+    // var expect    = Integer.parseInt(lines(2), 16)
     // var EXP_ADDR  = Integer.parseInt(lines(3), 16) // cuurent PC
-    var EXP_ADDR  = Integer.parseInt(lines(4), 16) // Next PC
+    // var EXP_ADDR  = Integer.parseInt(lines(4), 16) // Next PC
 
     // f_run_instruction(inst)
-    f_run_instruction_exp(inst, reg_num, expect)
+    f_run_instruction_exp(inst.U, reg_num, expect)
     step(1)
 
     // Next ADDR Check
