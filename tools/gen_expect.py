@@ -54,7 +54,7 @@ for line in open("../riscv_testpattern/run.log"):
     Inst_List.append([ADDR, opcode, [reg, expect], asm])
     state = "get_inst"
 
-file = open('./inst.txt', 'w')
+file = open('./expect.txt', 'w')
 
 print(Inst_List)
 for i in range(len(Inst_List)):
