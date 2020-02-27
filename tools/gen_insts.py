@@ -20,7 +20,7 @@ for line in open("../riscv_testpattern/run.log"):
 
   if(state=="get_inst"):
     if(line[0] == "core"):
-      ADDR   = line[2].replace("ffffffff800", "")
+      ADDR   = line[2].replace("ffffffff", "")
       opcode = line[3].replace("(", "").replace(")", "")
       asm    = " ".join(line[4:])
       state = "get_expect"

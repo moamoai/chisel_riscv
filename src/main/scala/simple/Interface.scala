@@ -6,7 +6,19 @@ import chisel3.util._
 class IF_IFtoID  extends Bundle {
   val opcode     = Output(UInt(32.W))
   val valid      = Output(UInt( 1.W))
+  val PC         = Output(UInt(32.W))
 }
+
+class IF_IDtoIF  extends Bundle {
+  val jump_addr  = Output(UInt(32.W))
+  val jump_valid = Output(UInt( 1.W))
+}
+
+class IF_RFtoID  extends Bundle {
+  val d_rs1 = Output(UInt(32.W))
+  val d_rs2 = Output(UInt(32.W))
+}
+
 class IF_IDtoRF  extends Bundle {
   val rd         = Output(UInt( 5.W))
   val rs1        = Output(UInt( 5.W))

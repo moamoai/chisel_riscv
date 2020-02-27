@@ -41,6 +41,9 @@ class RiscV extends Module {
   i_ex.io.if_IDtoEX := i_id.io.if_IDtoEX
   i_rf.io.if_IDtoRF := i_id.io.if_IDtoRF
 
+  i_if.io.if_IDtoIF := i_id.io.if_IDtoIF
+  i_id.io.if_RFtoID := i_rf.io.if_RFtoID
+
   // EX stage
   i_ex.io.if_RFtoEX := i_rf.io.if_RFtoEX
   i_wb.io.if_EXtoWB := i_ex.io.if_EXtoWB

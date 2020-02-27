@@ -8,6 +8,7 @@ class RF(DEBUG_INFO_EN:Int = 1) extends Module {
     var if_RFtoEX = new IF_RFtoEX
     var if_WBtoRF = Flipped(new IF_WBtoRF)
     var if_IDtoRF = Flipped(new IF_IDtoRF)
+    var if_RFtoID = new IF_RFtoID
     // Debug Port
     // var info_rf = if(DEBUG_INFO_EN==1) Output(Vec(4, UInt(32.W))) else None
     var info_rf = Output(Vec(32, UInt(32.W)))
@@ -32,6 +33,9 @@ class RF(DEBUG_INFO_EN:Int = 1) extends Module {
   io.if_RFtoEX.d_rd  := r_RegFile(rd )
   io.if_RFtoEX.d_rs1 := r_RegFile(rs1)
   io.if_RFtoEX.d_rs2 := r_RegFile(rs2)
+
+  io.if_RFtoID.d_rs1 := r_RegFile(rs1)
+  io.if_RFtoID.d_rs2 := r_RegFile(rs2)
 
   when(wvalid===1.U){
     when(w_rd != 0.U){

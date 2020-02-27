@@ -53,12 +53,15 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
   val filename = "inst.txt"
   var line_list = Source.fromFile(filename).getLines.toList
   // for (line <- line_list) {
-  var inst_addr = 0
+  var inst_addr = BigInt(0)
+  var base_addr = BigInt(0x80000000)
   var timer     = 10 // 10 cycle
 
   while((timer>0)){
-    inst_addr = peek(dut.io.inst_addr).intValue()
-    var line = line_list(inst_addr)
+    inst_addr = peek(dut.io.inst_addr) // .intValue()
+    var line_addr = (inst_addr-base_addr).toInt
+    // println(f"line_addr[0x$line_addr%08x]")
+    var line = line_list(line_addr/4)
     println(line)
     var lines = line.split(" ")
     var inst_code = lines(0)
@@ -81,8 +84,8 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     step(1)
 
     // Next ADDR Check
-    inst_addr = peek(dut.io.inst_addr).intValue()
-    if((inst_addr*4)!=EXP_ADDR){
+    inst_addr = peek(dut.io.inst_addr)
+    if(inst_addr!=EXP_ADDR){
        println(f"[NG] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
        timer = 0
     }
