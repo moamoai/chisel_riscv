@@ -17,9 +17,9 @@ import chisel3.util._
 class Memory extends Module {
   val io = IO(new Bundle {
     val we    = Input (UInt(1.W))
-    val wdata = Input (UInt(16.W))
+    val wdata = Input (UInt(32.W))
     val addr  = Input (UInt(16.W))
-    val rdata = Output(UInt(16.W))
+    val rdata = Output(UInt(32.W))
   })
 
   // Use shorter variable names
@@ -27,11 +27,11 @@ class Memory extends Module {
   val wdata = io.wdata
   val addr  = io.addr
 
-  val rdata = Wire(UInt(16.W))
+  val rdata = Wire(UInt(32.W))
   // some default value is needed
   rdata := 0.U
 
-  val my_mem = Mem((1<<16), UInt(16.W))
+  val my_mem = Mem((1<<16), UInt(32.W))
 
   //loadMemoryFromFile(my_mem, "mem1.txt")
   // The ALU selection

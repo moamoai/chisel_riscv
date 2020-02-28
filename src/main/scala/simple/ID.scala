@@ -27,12 +27,17 @@ class ID extends Module {
   // imm_I_SInt := inst_code(31,20).asSInt
   val imm_I  = Wire(UInt(32.W))
   when(inst_code(31)===0.U){ // +
-    imm_I      := inst_code(30,20)
+    imm_I      := inst_code(31,20)
   }.otherwise{
     imm_I      := (0xFFFFF000L.U | inst_code(31,20))
   }
+  val imm_S  = Wire(UInt(32.W))
+  when(inst_code(31)===0.U){ // +
+    imm_S := (inst_code(31,25)<<5) + inst_code(11,7)
+  }.otherwise{
+    imm_S := (0xFFFFF000L.U | (inst_code(31,25)<<5) + inst_code(11,7))
+  }
 
-  // var imm_S = inst_code(7,7)
   var imm_U = (inst_code(31,12) << 12)
   // var imm_J = inst_code(31,31)
   var shamt = inst_code(24,20)
@@ -52,19 +57,23 @@ class ID extends Module {
   // opcode
   val illigal_op   = Wire(UInt(1.W))
   val lui_valid    = Wire(Bool())
+  val auipc_valid  = Wire(Bool())
   val load_valid   = Wire(Bool())
   val op_imm_valid = Wire(Bool())
   val op_valid     = Wire(Bool())
   val store_valid  = Wire(Bool())
   val jal_valid    = Wire(Bool())
+  val jalr_valid   = Wire(Bool())
   val bra_valid    = Wire(Bool())
   illigal_op   := 0.U
   lui_valid    := 0.U
+  auipc_valid  := 0.U
   load_valid   := 0.U
   op_imm_valid := 0.U
   op_valid     := 0.U
   store_valid  := 0.U
   jal_valid    := 0.U
+  jalr_valid   := 0.U
   bra_valid    := 0.U
   
   val alu_func  = Wire(UInt(6.W))
@@ -94,16 +103,24 @@ class ID extends Module {
       alu_func := func3
     }.elsewhen(opcode===0x23.U){ // STORE
       store_valid := 1.U
-      imm := (inst_code(31,25)<<5) + inst_code(4,0)
+      imm := imm_S
     }.elsewhen(opcode===0x37.U){ // LUI U-type
       alu_func := OBJ_ALU_FUNC.SEL_B
       lui_valid := 1.U
       imm := imm_U
+    }.elsewhen(opcode===0x17.U){ // AUIPC U-type
+      alu_func    := OBJ_ALU_FUNC.SEL_B
+      auipc_valid := 1.U
+      imm := PC + imm_U
     }.elsewhen(opcode===0x6F.U){ // JAL J-type
       alu_func := OBJ_ALU_FUNC.SEL_B
       jal_valid := 1.U
       imm := PC + 0x04.U
-    }.elsewhen(opcode===0x63.U){ // JAL J-type
+    }.elsewhen(opcode===0x67.U){ // JALR I-type
+      alu_func := OBJ_ALU_FUNC.SEL_B
+      imm := PC + 0x04.U
+      jalr_valid := 1.U
+    }.elsewhen(opcode===0x63.U){ // BRA B-type
       bra_valid := 1.U
     }.otherwise{
       illigal_op := 1.U
@@ -117,9 +134,11 @@ class ID extends Module {
   val bra_valid_true = Wire(UInt(1.W))
   jump_addr      := 0.U
   bra_valid_true := 0.U
-  jump_valid     := jal_valid
+  jump_valid     := jal_valid | jalr_valid
   when(jal_valid===1.U){
     jump_addr  := PC + imm_J
+  }.elsewhen(jalr_valid===1.U){
+    jump_addr  := d_rs1 // + imm_I
   }.elsewhen(bra_valid===1.U){
     jump_addr  := PC + imm_B
     when(((func3===0.U) && (d_rs1 ===d_rs2))|| // BEQ
@@ -136,17 +155,21 @@ class ID extends Module {
   io.if_IDtoIF.jump_valid := jump_valid | bra_valid_true
 
   // Output
-  io.if_IDtoEX.alu_func  := alu_func
-  io.if_IDtoEX.ldst_func := ldst_func
-  io.if_IDtoEX.imm       := imm
-  io.if_IDtoEX.imm_sel   := op_imm_valid | lui_valid | jal_valid
-  io.if_IDtoEX.rd        := rd
-  io.if_IDtoEX.valid     := op_valid | op_imm_valid | 
-                            load_valid | store_valid | lui_valid  |
-                            jal_valid
-  io.if_IDtoRF.rd        := rd
-  io.if_IDtoRF.rs1       := rs1
-  io.if_IDtoRF.rs2       := rs2
+  io.if_IDtoEX.alu_func    := alu_func
+  io.if_IDtoEX.ldst_func   := ldst_func
+  io.if_IDtoEX.imm         := imm
+  io.if_IDtoEX.imm_sel     := op_imm_valid | lui_valid | 
+                              jal_valid | jalr_valid |
+                              auipc_valid
+  io.if_IDtoEX.rd          := rd
+  io.if_IDtoEX.alu_valid   := op_valid | op_imm_valid | 
+                              lui_valid | auipc_valid |
+                              jal_valid | jalr_valid
+  io.if_IDtoEX.load_valid  := load_valid
+  io.if_IDtoEX.store_valid := store_valid
+  io.if_IDtoRF.rd          := rd
+  io.if_IDtoRF.rs1         := rs1
+  io.if_IDtoRF.rs2         := rs2
 
   io.illigal_op := illigal_op
 }

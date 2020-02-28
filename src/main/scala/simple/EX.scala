@@ -34,9 +34,29 @@ class EX extends Module {
     is(OBJ_ALU_FUNC.SEL_A) { o_alu := alu_a         }
     is(OBJ_ALU_FUNC.SEL_B) { o_alu :=         alu_b }
   }
+  // Load Store
 
-  io.if_EXtoWB.rd    := io.if_IDtoEX.rd
-  io.if_EXtoWB.d_alu := o_alu
-  io.if_EXtoWB.d_ld  := 0.U
-  io.if_EXtoWB.valid :=  io.if_IDtoEX.valid
+  // Memory
+  val addr = Wire(UInt(16.W))
+  val i_mem = Module(new Memory)
+  addr           := (io.if_RFtoEX.d_rs1 + io.if_IDtoEX.imm)(15,0)
+  i_mem.io.wdata := io.if_RFtoEX.d_rs2
+  i_mem.io.we    := io.if_IDtoEX.store_valid
+  i_mem.io.addr  := addr
+  
+  val wb_valid = Wire(UInt(1.W))
+  val wb_data  = Wire(UInt(32.W))
+  wb_data := 0.U
+  wb_valid := io.if_IDtoEX.alu_valid  |
+              io.if_IDtoEX.load_valid
+  when(io.if_IDtoEX.alu_valid === 1.U){
+    wb_data := o_alu
+  }.elsewhen(io.if_IDtoEX.load_valid === 1.U){
+    wb_data := i_mem.io.rdata
+  }
+
+  io.if_EXtoWB.rd       := io.if_IDtoEX.rd
+  io.if_EXtoWB.wbdata   := wb_data
+  io.if_EXtoWB.wbvalid := wb_valid
+  io.if_EXtoWB.valid    := wb_valid | io.if_IDtoEX.store_valid
 }

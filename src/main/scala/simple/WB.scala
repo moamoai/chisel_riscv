@@ -10,7 +10,7 @@ class WB extends Module {
     val ready     = Output(UInt( 1.W))
   })
   io.if_WBtoRF.rd    := io.if_EXtoWB.rd
-  io.if_WBtoRF.wdata := io.if_EXtoWB.d_alu
-  io.if_WBtoRF.valid := io.if_EXtoWB.valid
+  io.if_WBtoRF.wdata := io.if_EXtoWB.wbdata
+  io.if_WBtoRF.valid := io.if_EXtoWB.wbvalid
   io.ready           := io.if_EXtoWB.valid
 }

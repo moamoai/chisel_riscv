@@ -72,7 +72,7 @@ for i in range(len(Inst_List)):
     Inst_Next = Inst_List[i+1]
     NEXT_ADDR = Inst_Next[0].replace("0x", "")
   else:
-    NEXT_ADDR = 0
+    NEXT_ADDR = "beef"
   inst = "{0} {1} {2} {3} {4} // {5}\n".format(opcode, reg, expect, ADDR, NEXT_ADDR, asm)
   file.writelines(inst)
   #print(inst)

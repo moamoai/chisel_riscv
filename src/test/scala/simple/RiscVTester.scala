@@ -68,7 +68,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
   // for (line <- line_list) {
   var inst_addr = BigInt(0)
   var base_addr = BigInt(0x80000000)
-  var TIME_MAX  = 20
+  var TIME_MAX  = 100
   var timer     = 0 // 10 cycle
 
   while((TIME_MAX > timer)){
@@ -76,7 +76,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     var inst  = inst_map(inst_addr)
 
     // var line_addr = (inst_addr-base_addr).toInt
-    // println(f"line_addr[0x$line_addr%08x]")
+    println(f"inst_addr[0x$inst_addr%08x]")
     var line = line_list(timer) // line_addr/4
     var lines = line.split(" ")
     // var inst_code = lines(0)
@@ -99,13 +99,19 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
       timer = TIME_MAX
     }
     step(1)
-
     // Next ADDR Check
     inst_addr = peek(dut.io.inst_addr)
-    if(inst_addr!=EXP_ADDR){
-       println(f"[NG] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
-       println("ERROR LINE: "+line)
-       timer = TIME_MAX
+    if(EXP_ADDR!=BigInt(0xbeef)){ // Last instruction
+      if(inst_addr!=EXP_ADDR){
+         println(f"[NG] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
+         println("ERROR LINE: "+line)
+         timer = TIME_MAX
+      }
+    }else{
+      println(f"################################################################");
+      println(f"[OK] COMPLETE!! inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
+      println(f"################################################################");
+      timer = TIME_MAX
     }
 
     timer   = timer + 1
