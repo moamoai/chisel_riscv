@@ -9,15 +9,14 @@ state = "init"
 for line in open("../riscv_testpattern/run.log"):
   line = line.rstrip()
   line = line.split()
-  print state
-  print line
+  # print state
+  # print line
   if(state=="init"):
     ADDR   = line[2]
     if(ADDR == Start_ADDR):
       state = "get_inst"
     else:
       continue
-
   if(state=="get_inst"):
     if(line[0] == "core"):
       ADDR   = line[2].replace("ffffffff", "")
@@ -35,7 +34,8 @@ for line in open("../riscv_testpattern/run.log"):
       line.append("0x00000000")
     elif((op == "(0x0040006f)") # j pc + 0x4
       |(op == "(0x00008067)")   #  ret
-      |(op == "(0x0000006f)")): # j pc + 0x0
+      |(op == "(0x0000006f)")   # j pc + 0x0
+      ): 
       # state = "get_inst"
       # continue
       line.append("0")
@@ -45,18 +45,21 @@ for line in open("../riscv_testpattern/run.log"):
       break
 
     regx = line[3]
-    if(len(regx)==3): # x10,x11..
-      reg    = regx[1:2]
+    if (op[9:12] == "23)"):# sw(0x13)
+      reg    = "00"
+      expect = "0x00000000"
+    elif(len(regx)==3): # x10,x11..
+      reg    = regx[1:3]
       expect = line[4]
     else: # x 1, 
-      reg    = line[4]
+      reg    = "0"+line[4]
       expect = line[5]
     Inst_List.append([ADDR, opcode, [reg, expect], asm])
     state = "get_inst"
 
 file = open('./expect.txt', 'w')
 
-print(Inst_List)
+# print(Inst_List)
 for i in range(len(Inst_List)):
   Inst = Inst_List[i]
   opcode    = Inst[1].replace("0x","")

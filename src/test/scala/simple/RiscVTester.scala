@@ -18,7 +18,10 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     result &= f_run_instruction(inst_code)
     expect(dut.io.info_rf(reg_num), exp)
     var reg_val = peek(dut.io.info_rf(reg_num))
-    println(f"reg_num[0x$reg_num%02x] reg_val[0x$reg_val%08x] exp[0x$exp%08x]");
+    if(reg_val != exp){
+      println(f"reg_num[0x$reg_num%02x] reg_val[0x$reg_val%08x] exp[0x$exp%08x]");
+      result = 0
+    }
     return result;
   }
   def f_run_instruction(
@@ -83,14 +86,16 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     var EXP_ADDR  = BigInt(lines(4), 16) // Next PC
 
     // var inst      = Integer.parseInt(inst_code,16).U
-    var reg_num   = Integer.parseInt(lines(1), 16)
+    var reg_num   = Integer.parseInt(lines(1), 10)
     // var expect    = Integer.parseInt(lines(2), 16)
     // var EXP_ADDR  = Integer.parseInt(lines(3), 16) // cuurent PC
     // var EXP_ADDR  = Integer.parseInt(lines(4), 16) // Next PC
 
     // f_run_instruction(inst)
     if(f_run_instruction_exp(inst.U, reg_num, expect)!=1){
-      println("[NG] f_run_instruction_exp")
+      println(f"[NG] f_run_instruction_exp")
+      println(f"[NG] ADDR[0x$inst_addr%08x]: CODE[0x$inst%08x]")
+       println("[NG] ERROR LINE: "+line)
       timer = TIME_MAX
     }
     step(1)

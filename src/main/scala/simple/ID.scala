@@ -22,7 +22,16 @@ class ID extends Module {
   var rs1 = inst_code(19,15)
   var rs2 = inst_code(24,20)
   var func7 = inst_code(31,25)
-  var imm_I = inst_code(31,20)
+  // // var imm_I = inst_code(31,20)
+  // val imm_I_SInt = Wire(SInt(12.W))
+  // imm_I_SInt := inst_code(31,20).asSInt
+  val imm_I  = Wire(UInt(32.W))
+  when(inst_code(31)===0.U){ // +
+    imm_I      := inst_code(30,20)
+  }.otherwise{
+    imm_I      := (0xFFFFF000L.U | inst_code(31,20))
+  }
+
   // var imm_S = inst_code(7,7)
   var imm_U = (inst_code(31,12) << 12)
   // var imm_J = inst_code(31,31)
