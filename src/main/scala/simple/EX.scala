@@ -3,16 +3,14 @@ package simple
 import chisel3._
 import chisel3.util._
 
-import chisel3.util.experimental.loadMemoryFromFile
-
 class EX extends Module {
   val io = IO(new Bundle {
     var if_IDtoEX = Flipped(new IF_IDtoEX)
     var if_RFtoEX = Flipped(new IF_RFtoEX)
     var if_EXtoWB = new IF_EXtoWB
 
-    // Back door for test
-    val if_mem_bd = new IF_MEM_BD
+    // Memory IF
+    val if_mem = Flipped(new IF_MEM)
   })
 
   var alu_func  = io.if_IDtoEX.alu_func
@@ -30,11 +28,12 @@ class EX extends Module {
   o_alu := 0.U
   // ALU
   switch(alu_func(3,0)) {
-    is(OBJ_ALU_FUNC.ADD  ) { o_alu :=  alu_a +  alu_b     }
-    is(OBJ_ALU_FUNC.SLL  ) { o_alu :=  alu_a << alu_b(4,0)}
-    is(OBJ_ALU_FUNC.SLT  ) { o_alu := (alu_a <  alu_b)    } // ok?
-    is(OBJ_ALU_FUNC.SLTU ) { o_alu := (alu_a <  alu_b)    } // tmp
-    is(OBJ_ALU_FUNC.SRL  ) { o_alu :=  alu_a >> alu_b(4,0)}
+    is(OBJ_ALU_FUNC.ADD  ) { o_alu :=  alu_a +  alu_b              }
+    is(OBJ_ALU_FUNC.SLL  ) { o_alu :=  alu_a << alu_b(4,0)         }
+    is(OBJ_ALU_FUNC.SLT  ) { o_alu := (alu_a.asSInt < alu_b.asSInt)}
+    is(OBJ_ALU_FUNC.SLTU ) { o_alu := (alu_a <  alu_b)             }
+    is(OBJ_ALU_FUNC.SRL  ) { o_alu :=  alu_a         >> alu_b(4,0)        }
+    is(OBJ_ALU_FUNC.SRA  ) { o_alu :=  (alu_a.asSInt >> alu_b(4,0)).asUInt}
 
     is(OBJ_ALU_FUNC.XOR  ) { o_alu := alu_a ^ alu_b }
     is(OBJ_ALU_FUNC.OR   ) { o_alu := alu_a | alu_b }
@@ -47,8 +46,6 @@ class EX extends Module {
 
   // Memory
   val addr = Wire(UInt(16.W))
-  // val i_mem = Module(new Memory)
-  val i_mem = Module(new Memory_BD)
   val wdata    = Wire(UInt(32.W))
   wdata := 0.U
   val rdata    = Wire(UInt(32.W))
@@ -77,16 +74,16 @@ class EX extends Module {
         wdata := d_rs2
     }
   }
-  i_mem.io.wdata := wdata
-  i_mem.io.we    := io.if_IDtoEX.store_valid
-  i_mem.io.addr  := addr & 0xFFFC.U // tmp?
-  i_mem.io.if_mem_bd <> io.if_mem_bd
+
+  io.if_mem.wdata := wdata
+  io.if_mem.we    := io.if_IDtoEX.store_valid
+  io.if_mem.addr  := addr & 0xFFFC.U // tmp?
 
   val rdata_b  = Wire(UInt(8.W ))
   val rdata_h  = Wire(UInt(16.W))
   rdata_b := 0.U
   rdata_h := 0.U
-  rdata := i_mem.io.rdata
+  rdata := io.if_mem.rdata
   
   val wb_valid = Wire(UInt(1.W))
   val wb_data  = Wire(UInt(32.W))

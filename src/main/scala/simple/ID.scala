@@ -43,10 +43,12 @@ class ID extends Module {
   // var imm_J = inst_code(31,31)
   var shamt = inst_code(24,20)
 
-  var imm_J = (inst_code(31)   <<20) + // [20]
-              (inst_code(19,12)<<12) + // [19:12]
+  val imm_J    = Wire(UInt(32.W))
+  val imm_J_20 = Wire(UInt(20.W))
+  imm_J_20 := (inst_code(19,12)<<12) + // [19:12]
               (inst_code(20)   <<11) + // [11]
               (inst_code(30,21)<<1 )   // [10:1]
+  imm_J := Cat(Fill(12, inst_code(31)), imm_J_20)
 
   val imm_B    = Wire(UInt(32.W))
   val imm_B_12 = Wire(UInt(12.W))
@@ -112,8 +114,11 @@ class ID extends Module {
     }.elsewhen(opcode===0x13.U){ // OP-IMM/I-type
       op_imm_valid := 1.U
       imm := imm_I
-      // alu_func := (inst_code(30)<<3) | func3
-      alu_func := ((inst_code(31,25)==="b0100000".U)<<3) | func3
+      when(func3===5.U){ // SRLI or SRAI
+        alu_func := ((inst_code(31,25)==="b0100000".U)<<3) | func3
+      }.otherwise{
+        alu_func := func3
+      }
     }.elsewhen(opcode===0x33.U){ // OP/R-type
       op_valid := 1.U
       imm := 0.U
@@ -165,7 +170,7 @@ class ID extends Module {
   when(jal_valid===1.U){
     jump_addr  := PC + imm_J
   }.elsewhen(jalr_valid===1.U){
-    jump_addr  := d_rs1 // + imm_I
+    jump_addr  := d_rs1 + imm_I
   }.elsewhen(bra_valid===1.U){
     jump_addr  := PC + imm_B
     when(((func3===0.U) && (d_rs1 ===d_rs2))|| // BEQ

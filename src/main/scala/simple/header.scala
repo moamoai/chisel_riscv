@@ -17,7 +17,7 @@ object OBJ_ALU_FUNC {
   val SEL_B  = 10.U(4.W)
 // val   = 11.U(4.W)
 // val   = 12.U(4.W)
-  val SLA  = 13.U(4.W)
+  val SRA  = 13.U(4.W)
 }
 
 object REG {

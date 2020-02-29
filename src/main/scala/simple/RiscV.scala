@@ -9,6 +9,7 @@ class RiscV extends Module {
   val io = IO(new Bundle {
     val start         = Input (UInt(32.W))
     val inst_code     = Input (UInt(32.W))
+    // val inst_code     = OUtput (UInt(32.W))
     val inst_valid    = Input (UInt(1.W))
     val inst_addr     = Output (UInt(32.W))
     val inst_ready    = Output(UInt(1.W))
@@ -22,8 +23,8 @@ class RiscV extends Module {
   })
 
   // Use shorter variable names
-  val valid         = io.inst_valid
-  val code          = io.inst_code
+  val valid     = io.inst_valid
+  val inst_code = Wire(UInt(32.W)) //io.inst_code
 
   // Instance
   val i_if = Module(new IF)
@@ -35,7 +36,7 @@ class RiscV extends Module {
   // IF stage
   i_if.io.start      := io.start
   i_if.io.ready      := i_wb.io.ready
-  i_if.io.inst_code  := code
+  i_if.io.inst_code  := inst_code
   i_if.io.inst_valid := valid
   i_id.io.if_IFtoID  := i_if.io.if_IFtoID
   io.inst_addr       := i_if.io.inst_addr
@@ -50,10 +51,23 @@ class RiscV extends Module {
   // EX stage
   i_ex.io.if_RFtoEX := i_rf.io.if_RFtoEX
   i_wb.io.if_EXtoWB := i_ex.io.if_EXtoWB
-  i_ex.io.if_mem_bd <> io.if_mem_bd
+  // i_ex.io.if_mem_bd <> io.if_mem_bd
 
   // WB stage
   i_rf.io.if_WBtoRF := i_wb.io.if_WBtoRF
+
+  // Memory
+  // val i_mem = Module(new Memory)
+  val i_mem = Module(new Memory_BD)
+  i_mem.io.we          := i_ex.io.if_mem.we
+  i_mem.io.addr        := i_ex.io.if_mem.addr
+  i_mem.io.wdata       := i_ex.io.if_mem.wdata
+  i_ex.io.if_mem.rdata := i_mem.io.rdata
+  i_mem.io.addr2 := i_if.io.inst_addr
+  // inst_code       := i_mem.io.rdata2
+  inst_code := io.inst_code
+
+  i_mem.io.if_mem_bd <> io.if_mem_bd
 
   // Error
   val i_err = Module(new ErrorM)

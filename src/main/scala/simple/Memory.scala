@@ -17,14 +17,15 @@ class Memory_BD extends Module{
     val we        = Input (UInt(1.W))
     val wdata     = Input (UInt(32.W))
     val addr      = Input (UInt(16.W))
+    val addr2     = Input (UInt(16.W))
     val rdata     = Output(UInt(32.W))
+    val rdata2    = Output(UInt(32.W))
   })
 
   val i_mem = Module(new Memory)
   val we    = Wire(UInt(1.W))
   val wdata = Wire(UInt(32.W))
   val addr  = Wire(UInt(16.W))
-  val rdata = Wire(UInt(32.W))
   we    := 0.U
   wdata := 0.U
   addr  := 0.U
@@ -32,9 +33,11 @@ class Memory_BD extends Module{
   i_mem.io.wdata := wdata
   i_mem.io.we    := we
   i_mem.io.addr  := addr
-  rdata          := i_mem.io.rdata
-  io.rdata           := rdata
-  io.if_mem_bd.rdata := rdata
+  i_mem.io.addr2 := io.addr2
+
+  io.rdata       := i_mem.io.rdata
+  io.rdata2      := i_mem.io.rdata2
+  io.if_mem_bd.rdata := i_mem.io.rdata
 
   when(io.if_mem_bd.bd_en === 1.U){
     addr  := io.if_mem_bd.addr
@@ -49,18 +52,22 @@ class Memory_BD extends Module{
 
 class Memory extends Module {
   val io = IO(new Bundle {
-    val we    = Input (UInt(1.W))
-    val wdata = Input (UInt(32.W))
-    val addr  = Input (UInt(16.W))
-    val rdata = Output(UInt(32.W))
+    val we     = Input (UInt(1.W))
+    val wdata  = Input (UInt(32.W))
+    val addr   = Input (UInt(16.W))
+    val addr2  = Input (UInt(16.W))
+    val rdata  = Output(UInt(32.W))
+    val rdata2 = Output(UInt(32.W))
   })
 
   // Use shorter variable names
   val we    = io.we
   val wdata = io.wdata
   val addr  = io.addr
+  val addr2 = io.addr2
 
-  val rdata = Wire(UInt(32.W))
+  val rdata  = Wire(UInt(32.W))
+  val rdata2 = Wire(UInt(32.W))
   // some default value is needed
   rdata := 0.U
 
@@ -71,10 +78,11 @@ class Memory extends Module {
   when(we === 1.U) {
     my_mem(addr) := wdata
   }
-  rdata := my_mem(addr)
+  rdata  := my_mem(addr)
+  rdata2 := my_mem(addr2)
 
-  // Output on the LEDs
-  io.rdata := rdata
+  io.rdata  := rdata
+  io.rdata2 := rdata2
 }
 
 // Generate the Verilog code by invoking the Driver

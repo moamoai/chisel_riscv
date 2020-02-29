@@ -10,6 +10,12 @@ class IF_MEM_BD  extends Bundle {
     val addr      = Input (UInt(16.W))
     val rdata     = Output(UInt(32.W))
 }
+class IF_MEM  extends Bundle {
+    val we        = Input (UInt(1.W))
+    val wdata     = Input (UInt(32.W))
+    val addr      = Input (UInt(16.W))
+    val rdata     = Output(UInt(32.W))
+}
 
 class IF_IFtoID  extends Bundle {
   val opcode     = Output(UInt(32.W))
