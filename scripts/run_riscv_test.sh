@@ -4,6 +4,7 @@ mkdir -p logs
 
 # LOG_DIR="../riscv_testpattern/logs/"
 # PAT_DIR="../01_comp/riscv-tests/isa/"
+# ls -1 ${PAT_DIR} | grep -e "rv32ui-p" | grep -v "dump" > test_list_all
 
 grep -v "#" test_list_all > test_list
 
