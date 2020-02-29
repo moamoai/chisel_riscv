@@ -10,7 +10,7 @@ for line in open("./run_spike.log"):
   line = line.rstrip()
   line = line.split()
   # print state
-  # print line
+  print line
   if(state=="init"):
     ADDR   = line[2]
     if(ADDR == Start_ADDR):
@@ -43,6 +43,7 @@ for line in open("./run_spike.log"):
       | ((int(op[9:11],16)&0x7F) == int("73",16)) # csrw
       | ((int(op[9:11],16)&0x7F) == int("0f",16)) # fence
       | (op[8:11] == "033") # [tmp?] add     zero,
+      | (op[8:11] == "013") # [tmp?] addi    zero,
       ): 
       # state = "get_inst"
       # continue

@@ -27,7 +27,7 @@ for line in open("./pattern.dump"):
 
 file = open('./inst.txt', 'w')
 
-print(Inst_List)
+# print(Inst_List)
 for i in range(len(Inst_List)):
   Inst   = Inst_List[i]
   ADDR   = Inst[0]

@@ -68,15 +68,14 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
   // for (line <- line_list) {
   var inst_addr = BigInt(0)
   var base_addr = BigInt(0x80000000)
-  var TIME_MAX  = 100
+  var TIME_MAX  = 1000
   var timer     = 0 // 10 cycle
 
   while((TIME_MAX > timer)){
     inst_addr = peek(dut.io.inst_addr) // .intValue()
     var inst  = inst_map(inst_addr)
 
-    // var line_addr = (inst_addr-base_addr).toInt
-    println(f"inst_addr[0x$inst_addr%08x]")
+    // println(f"inst_addr[0x$inst_addr%08x]")
     var line = line_list(timer) // line_addr/4
     var lines = line.split(" ")
     // var inst_code = lines(0)
@@ -92,26 +91,33 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     // var EXP_ADDR  = Integer.parseInt(lines(4), 16) // Next PC
 
     // f_run_instruction(inst)
-    if(f_run_instruction_exp(inst.U, reg_num, expect)!=1){
-      println(f"[NG] f_run_instruction_exp")
-      println(f"[NG] ADDR[0x$inst_addr%08x]: CODE[0x$inst%08x]")
-       println("[NG] ERROR LINE: "+line)
+    if(inst == 0x73){ // ECALL instruction.
+      println(f"################################################################");
+      println(f"[TMP_OK(ECALL)] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
+      println(f"################################################################");
       timer = TIME_MAX
-    }
-    step(1)
-    // Next ADDR Check
-    inst_addr = peek(dut.io.inst_addr)
-    if(EXP_ADDR!=BigInt(0xbeef)){ // Last instruction
-      if(inst_addr!=EXP_ADDR){
-         println(f"[NG] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
-         println("ERROR LINE: "+line)
-         timer = TIME_MAX
-      }
     }else{
-      println(f"################################################################");
-      println(f"[OK] COMPLETE!! inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
-      println(f"################################################################");
-      timer = TIME_MAX
+      if(f_run_instruction_exp(inst.U, reg_num, expect)!=1){
+        println(f"[NG] f_run_instruction_exp")
+        println(f"[NG] ADDR[0x$inst_addr%08x]: CODE[0x$inst%08x]")
+         println("[NG] ERROR LINE: "+line)
+        timer = TIME_MAX
+      }
+      step(1)
+      // Next ADDR Check
+      inst_addr = peek(dut.io.inst_addr)
+      if(EXP_ADDR!=BigInt(0xbeef)){ // Last instruction
+        if(inst_addr!=EXP_ADDR){
+           println(f"[NG] inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
+           println("ERROR LINE: "+line)
+           timer = TIME_MAX
+        }
+      }else{
+        println(f"################################################################");
+        println(f"[OK] COMPLETE!! inst_addr[0x$inst_addr%08x] EXP[0x$EXP_ADDR%08x]");
+        println(f"################################################################");
+        timer = TIME_MAX
+      }
     }
 
     timer   = timer + 1

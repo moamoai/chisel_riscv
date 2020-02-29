@@ -5,15 +5,19 @@ import chisel3.util._
 
 object OBJ_ALU_FUNC {
   val ADD  = 0.U(4.W)
-  val SUB  = 1.U(4.W)
-//  val   = 2.U(4.W)
-//  val   = 3.U(4.W)
+  val SLL  = 1.U(4.W)
+  val SLT  = 2.U(4.W)
+  val SLTU  = 3.U(4.W)
   val XOR  = 4.U(4.W)
-//  val   = 5.U(4.W)
+  val SRL  = 5.U(4.W)
   val OR  = 6.U(4.W)
   val AND  = 7.U(4.W)
-  val SEL_A  = 8.U(4.W)
-  val SEL_B  = 9.U(4.W)
+  val SUB  = 8.U(4.W)
+  val SEL_A  = 9.U(4.W)
+  val SEL_B  = 10.U(4.W)
+// val   = 11.U(4.W)
+// val   = 12.U(4.W)
+  val SLA  = 13.U(4.W)
 }
 
 object REG {

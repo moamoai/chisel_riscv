@@ -26,11 +26,16 @@ class EX extends Module {
   o_alu := 0.U
   // ALU
   switch(alu_func(3,0)) {
-    is(OBJ_ALU_FUNC.ADD  ) { o_alu := alu_a + alu_b }
-    is(OBJ_ALU_FUNC.SUB  ) { o_alu := alu_a - alu_b }
+    is(OBJ_ALU_FUNC.ADD  ) { o_alu :=  alu_a +  alu_b     }
+    is(OBJ_ALU_FUNC.SLL  ) { o_alu :=  alu_a << alu_b(4,0)}
+    is(OBJ_ALU_FUNC.SLT  ) { o_alu := (alu_a <  alu_b)    } // ok?
+    is(OBJ_ALU_FUNC.SLTU ) { o_alu := (alu_a <  alu_b)    } // tmp
+    is(OBJ_ALU_FUNC.SRL  ) { o_alu :=  alu_a >> alu_b(4,0)}
+
     is(OBJ_ALU_FUNC.XOR  ) { o_alu := alu_a ^ alu_b }
     is(OBJ_ALU_FUNC.OR   ) { o_alu := alu_a | alu_b }
     is(OBJ_ALU_FUNC.AND  ) { o_alu := alu_a & alu_b }
+    is(OBJ_ALU_FUNC.SUB  ) { o_alu := alu_a - alu_b }
     is(OBJ_ALU_FUNC.SEL_A) { o_alu := alu_a         }
     is(OBJ_ALU_FUNC.SEL_B) { o_alu :=         alu_b }
   }

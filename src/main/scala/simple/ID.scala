@@ -17,7 +17,8 @@ class ID extends Module {
   inst_code := io.if_IFtoID.opcode
 
   var opcode = inst_code(6,0)
-  var rd = inst_code(11,7)
+  val rd = Wire(UInt(5.W))
+  rd := 0.U
   var func3 = inst_code(14,12)
   var rs1 = inst_code(19,15)
   var rs2 = inst_code(24,20)
@@ -46,10 +47,14 @@ class ID extends Module {
               (inst_code(19,12)<<12) + // [19:12]
               (inst_code(20)   <<11) + // [11]
               (inst_code(30,21)<<1 )   // [10:1]
-  var imm_B = (inst_code(31)   <<12) + //[12]
-              (inst_code(7)    <<11) + //[11]
-              (inst_code(10,5) <<5 ) + //[10:5]
-              (inst_code(11,8) <<1 )   //[4:1]
+
+  val imm_B    = Wire(UInt(32.W))
+  val imm_B_12 = Wire(UInt(12.W))
+  // imm_B := (inst_code(31)    <<12) + //[12]
+  imm_B_12 := (inst_code(7)     <<11) + //[11]
+              (inst_code(30,25) <<5 ) + //[10:5]
+              (inst_code(11,8)  <<1 )   //[4:1]
+  imm_B := Cat(Fill(20, inst_code(31)), imm_B_12)
 
   // imm sel
   val imm = Wire(UInt(32.W))
@@ -65,6 +70,9 @@ class ID extends Module {
   val jal_valid    = Wire(Bool())
   val jalr_valid   = Wire(Bool())
   val bra_valid    = Wire(Bool())
+  val csrw_valid   = Wire(Bool())
+  val csrr_valid   = Wire(Bool())
+  val fence_valid  = Wire(Bool())
   illigal_op   := 0.U
   lui_valid    := 0.U
   auipc_valid  := 0.U
@@ -75,6 +83,9 @@ class ID extends Module {
   jal_valid    := 0.U
   jalr_valid   := 0.U
   bra_valid    := 0.U
+  csrw_valid   := 0.U
+  csrr_valid   := 0.U
+  fence_valid  := 0.U
   
   val alu_func  = Wire(UInt(6.W))
   val ldst_func = Wire(UInt(6.W))
@@ -87,6 +98,11 @@ class ID extends Module {
   val d_rs2 = Wire(UInt(32.W))
   d_rs1 := io.if_RFtoID.d_rs1
   d_rs2 := io.if_RFtoID.d_rs2
+  when((csrw_valid === 1.U)|| (bra_valid === 1.U) || (fence_valid === 1.U)){
+    rd := 0.U // Nop for cswr.
+  }.otherwise{
+    rd := inst_code(11,7)
+  }
 
   // Decorder
   when(io.if_IFtoID.valid === 1.U){
@@ -96,11 +112,12 @@ class ID extends Module {
     }.elsewhen(opcode===0x13.U){ // OP-IMM/I-type
       op_imm_valid := 1.U
       imm := imm_I
-      alu_func := func3
+      // alu_func := (inst_code(30)<<3) | func3
+      alu_func := ((inst_code(31,25)==="b0100000".U)<<3) | func3
     }.elsewhen(opcode===0x33.U){ // OP/R-type
       op_valid := 1.U
       imm := 0.U
-      alu_func := func3
+      alu_func := ((inst_code(31,25)==="b0100000".U)<<3) | func3
     }.elsewhen(opcode===0x23.U){ // STORE
       store_valid := 1.U
       imm := imm_S
@@ -122,8 +139,18 @@ class ID extends Module {
       jalr_valid := 1.U
     }.elsewhen(opcode===0x63.U){ // BRA B-type
       bra_valid := 1.U
-    }.otherwise{
+    }.elsewhen(opcode===0x73.U){ // CSR
+      when(func3==="b001".U){ // CSRRW
+        csrw_valid := 1.U
+      }.otherwise{            // CSRRR
+        csrr_valid := 1.U
+      }
+    }.elsewhen(opcode===0x0F.U){ // FENCE
+      fence_valid := 1.U
+    }.otherwise{  // Illegal
       illigal_op := 1.U
+      alu_func := OBJ_ALU_FUNC.SEL_B
+      imm      := 0.U // tmp(csr read data)
     }
   }
   // assert(illigal_op === 0x0.U, "[NG]Illigal OP!!")
@@ -143,7 +170,7 @@ class ID extends Module {
     jump_addr  := PC + imm_B
     when(((func3===0.U) && (d_rs1 ===d_rs2))|| // BEQ
          ((func3===1.U) && (d_rs1 != d_rs2))|| // BNE
-         ((func3===4.U) && (d_rs1  < d_rs2))|| // BLT
+         ((func3===4.U) && (d_rs1.asSInt < d_rs2.asSInt))|| // BLT
          ((func3===5.U) && (d_rs1 >= d_rs2))|| // BGE
          ((func3===6.U) && (d_rs1  < d_rs2))|| // BLTU
          ((func3===7.U) && (d_rs1 >= d_rs2)))  // BGEU
@@ -162,9 +189,11 @@ class ID extends Module {
                               jal_valid | jalr_valid |
                               auipc_valid
   io.if_IDtoEX.rd          := rd
-  io.if_IDtoEX.alu_valid   := op_valid | op_imm_valid | 
-                              lui_valid | auipc_valid |
-                              jal_valid | jalr_valid
+  io.if_IDtoEX.alu_valid   := op_valid   | op_imm_valid | 
+                              lui_valid  | auipc_valid |
+                              jal_valid  | jalr_valid  |
+                              csrw_valid | csrr_valid | // tmp. 
+                              bra_valid  | fence_valid
   io.if_IDtoEX.load_valid  := load_valid
   io.if_IDtoEX.store_valid := store_valid
   io.if_IDtoRF.rd          := rd

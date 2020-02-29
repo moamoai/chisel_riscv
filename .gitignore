@@ -6,3 +6,6 @@ generated/*.fir
 *bat
 generated/*.v
 .metals/metals.log
+logs/*
+*.log
+*.dump
