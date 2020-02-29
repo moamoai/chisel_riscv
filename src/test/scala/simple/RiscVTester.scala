@@ -34,7 +34,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     return rdata;
   }
   def f_run_instruction_exp(
-          inst_code : UInt,
+          inst_code : BigInt,
           reg_num   : Int,
           exp       : BigInt
     ) : Int = {
@@ -49,11 +49,17 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     return result;
   }
   def f_run_instruction(
-          inst_code : UInt
+          inst_code : BigInt
     ) : Int = {
     var result = 1 // 1:OK 0:NG
+
+    var inst_mem = peek(dut.io.inst_code)
+    if(inst_code!=inst_mem){
+      println("[!!] inst_code!=inst_mem!!")
+      println(f"inst_code[$inst_code%08x] inst_mem[$inst_mem%08x]")
+    }
+    // poke(dut.io.inst_code , inst_code.U)
     poke(dut.io.inst_valid, 1.U)
-    poke(dut.io.inst_code , inst_code)
     step(1)
 
     var ready = peek(dut.io.inst_ready)
@@ -79,7 +85,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     var ADDR = BigInt(tmp(0),16) & 0x0000FFFFL
     var DATA = BigInt(tmp(1),16)
     mem_write(ADDR.U, DATA.U)
-    mem_read (ADDR.U)
+    // mem_read (ADDR.U)
   }
 
   // Start Sim
@@ -95,6 +101,8 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     var ADDR = BigInt(tmp(0),16)
     var CODE = BigInt(tmp(1),16)
     inst_map = inst_map + (ADDR -> CODE)
+    mem_write(ADDR.U, CODE.U)
+    // mem_read (ADDR.U)
   }
 
   val filename = "expect.txt"
@@ -131,7 +139,7 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
       println(f"################################################################");
       timer = TIME_MAX
     }else{
-      if(f_run_instruction_exp(inst.U, reg_num, expect)!=1){
+      if(f_run_instruction_exp(inst, reg_num, expect)!=1){
         println(f"[NG] f_run_instruction_exp")
         println(f"[NG] ADDR[0x$inst_addr%08x]: CODE[0x$inst%08x]")
          println("[NG] ERROR LINE: "+line)

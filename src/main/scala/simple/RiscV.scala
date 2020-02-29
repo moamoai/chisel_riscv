@@ -8,8 +8,8 @@ import chisel3.util.experimental.loadMemoryFromFile
 class RiscV extends Module {
   val io = IO(new Bundle {
     val start         = Input (UInt(32.W))
-    val inst_code     = Input (UInt(32.W))
-    // val inst_code     = OUtput (UInt(32.W))
+    // val inst_code     = Input (UInt(32.W))
+    val inst_code     = Output (UInt(32.W))
     val inst_valid    = Input (UInt(1.W))
     val inst_addr     = Output (UInt(32.W))
     val inst_ready    = Output(UInt(1.W))
@@ -64,8 +64,9 @@ class RiscV extends Module {
   i_mem.io.wdata       := i_ex.io.if_mem.wdata
   i_ex.io.if_mem.rdata := i_mem.io.rdata
   i_mem.io.addr2 := i_if.io.inst_addr
-  // inst_code       := i_mem.io.rdata2
-  inst_code := io.inst_code
+  inst_code       := i_mem.io.rdata2
+  // inst_code := io.inst_code
+  io.inst_code := inst_code
 
   i_mem.io.if_mem_bd <> io.if_mem_bd
 
