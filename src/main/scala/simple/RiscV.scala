@@ -14,8 +14,11 @@ class RiscV extends Module {
     val inst_ready    = Output(UInt(1.W))
     val error         = Output(UInt( 1.W))
 
+    // Back door for test
+    val if_mem_bd = new IF_MEM_BD
+
     // Debug Port
-    var info_rf = Output(Vec(32, UInt(32.W)))
+    var info_rf   = Output(Vec(32, UInt(32.W)))
   })
 
   // Use shorter variable names
@@ -47,6 +50,7 @@ class RiscV extends Module {
   // EX stage
   i_ex.io.if_RFtoEX := i_rf.io.if_RFtoEX
   i_wb.io.if_EXtoWB := i_ex.io.if_EXtoWB
+  i_ex.io.if_mem_bd <> io.if_mem_bd
 
   // WB stage
   i_rf.io.if_WBtoRF := i_wb.io.if_WBtoRF

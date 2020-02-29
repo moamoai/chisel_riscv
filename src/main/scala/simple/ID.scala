@@ -90,7 +90,7 @@ class ID extends Module {
   val alu_func  = Wire(UInt(6.W))
   val ldst_func = Wire(UInt(6.W))
   alu_func  := 0.U
-  ldst_func := (load_valid << 5) + (store_valid << 4) + func3
+  ldst_func := func3
 
   val PC = Wire(UInt(32.W))
   PC := io.if_IFtoID.PC

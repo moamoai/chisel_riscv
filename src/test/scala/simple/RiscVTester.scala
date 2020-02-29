@@ -9,6 +9,30 @@ import scala.io.Source
  * Test the RiscV design
  */
 class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
+  def mem_write(
+    addr : UInt,
+    wdata: UInt
+  ): Int ={
+    poke(dut.io.if_mem_bd.bd_en, 1.U)
+    poke(dut.io.if_mem_bd.we   , 1.U)
+    poke(dut.io.if_mem_bd.addr , addr)
+    poke(dut.io.if_mem_bd.wdata, wdata)
+    step(1)
+    poke(dut.io.if_mem_bd.bd_en, 0.U)
+    poke(dut.io.if_mem_bd.we   , 0.U)
+    return 0;
+  }
+  def mem_read(
+    addr : UInt
+  ): BigInt ={
+    poke(dut.io.if_mem_bd.bd_en, 1.U)
+    poke(dut.io.if_mem_bd.addr , addr)
+    var rdata = peek(dut.io.if_mem_bd.rdata)
+    step(1)
+    poke(dut.io.if_mem_bd.bd_en, 0.U)
+    println(f"addr[0x$addr%04x] rdata[0x$rdata%08x]");
+    return rdata;
+  }
   def f_run_instruction_exp(
           inst_code : UInt,
           reg_num   : Int,
@@ -46,6 +70,16 @@ class RiscVTester(dut: RiscV) extends PeekPokeTester(dut) {
     poke(dut.io.inst_valid, 0.U)
     step(1)
     return result;
+  }
+
+  // Init Mem
+  var data_list = Source.fromFile("data.txt").getLines.toList
+  for (data <- data_list){
+    var tmp = data.split(" ")
+    var ADDR = BigInt(tmp(0),16) & 0x0000FFFFL
+    var DATA = BigInt(tmp(1),16)
+    mem_write(ADDR.U, DATA.U)
+    mem_read (ADDR.U)
   }
 
   // Start Sim

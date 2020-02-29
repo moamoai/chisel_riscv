@@ -3,6 +3,14 @@ package simple
 import chisel3._
 import chisel3.util._
 
+class IF_MEM_BD  extends Bundle {
+    val bd_en     = Input (UInt(1.W))
+    val we        = Input (UInt(1.W))
+    val wdata     = Input (UInt(32.W))
+    val addr      = Input (UInt(16.W))
+    val rdata     = Output(UInt(32.W))
+}
+
 class IF_IFtoID  extends Bundle {
   val opcode     = Output(UInt(32.W))
   val valid      = Output(UInt( 1.W))
