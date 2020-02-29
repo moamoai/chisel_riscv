@@ -96,31 +96,37 @@ class EX extends Module {
   when(io.if_IDtoEX.alu_valid === 1.U){
     wb_data := o_alu
   }.elsewhen(io.if_IDtoEX.load_valid === 1.U){
-    when(ldst_func===0.U){         // LB
-      when(addr(1,0) === 0x0.U){
-        rdata_b := rdata(7,0)
-      }.elsewhen(addr(1,0) === 0x1.U){
-        rdata_b := rdata(15,8)
-      }.elsewhen(addr(1,0) === 0x2.U){
-        rdata_b := rdata(23,16)
-      }.elsewhen(addr(1,0) === 0x3.U){
-        rdata_b := rdata(31,24)
-      }
+    when(addr(1,0) === 0x0.U){
+      rdata_b := rdata(7,0)
+    }.elsewhen(addr(1,0) === 0x1.U){
+      rdata_b := rdata(15,8)
+    }.elsewhen(addr(1,0) === 0x2.U){
+      rdata_b := rdata(23,16)
+    }.elsewhen(addr(1,0) === 0x3.U){
+      rdata_b := rdata(31,24)
+    }
+    when(addr(1,0) === 0x0.U){
+      rdata_h := rdata(15,0)
+    }.elsewhen(addr(1,0) ===0x2.U){
+      rdata_h := rdata(31,16)
+    }
+
+    when(ldst_func===0.U){       // LB
       wb_data := Cat(Fill(24, rdata_b(7)) , rdata_b( 7,0))
+    }.elsewhen(ldst_func===4.U){ // LBU
+      wb_data := rdata_b
     }.elsewhen(ldst_func === 1.U){ // LH
-      when(addr(1,0) === 0x0.U){
-        rdata_h := rdata(15,0)
-      }.elsewhen(addr(1,0) ===0x2.U){
-        rdata_h := rdata(31,16)
-      }
       wb_data := Cat(Fill(16, rdata_h(15)), rdata_h(15,0))
+    }.elsewhen(ldst_func === 5.U){ // LHU
+      wb_data := rdata_h
     }.elsewhen(ldst_func === 2.U){ // LW
       wb_data := rdata
-    }.elsewhen(ldst_func === 4.U){ // LBU
-      wb_data := rdata(7,0)
-    }.elsewhen(ldst_func === 5.U){ // LHU
-      wb_data := rdata(15,0)
     }
+//    }.elsewhen(ldst_func === 4.U){ // LBU
+//      wb_data := rdata(7,0)
+//    }.elsewhen(ldst_func === 5.U){ // LHU
+//      wb_data := rdata(15,0)
+//    }
   }
 
   io.if_EXtoWB.rd       := io.if_IDtoEX.rd

@@ -6,31 +6,34 @@ def _is_hex(val):
     return True
   except ValueError, e:
     return False
+def changeEndian(data): # data=12345678 -> 78563412
+  return (data[6:8] + data[4:6] +  data[2:4] + data[0:2])
 
 Inst_List = [] # [[ADDR, CODE, ASM] , ..]
 Data_List = [] # [[ADDR, Data, ASM] , ..]
 
 Start_ADDR = "0xffffffff80000000"
 state = "inst"
-for line in open("./pattern.dump"):
+for line in open("./data.dump"):
   line = line.rstrip()
-  if(line == "Disassembly of section .data:"):
+  if(line == "Contents of section .data:"):
     state = "data"
 
   line = line.split()
-#   print state
-  if(line == []):
+  if((state == "inst") | (line == [])):
     continue
-  if((line[0][-1] == ":")&
-     _is_hex(line[0][0:8])):
-    #(line[0]     != "hello.elf:") ):
-    ADDR = line[0].replace(":","")
-    CODE = line[1]
-    ASM    = " ".join(line[2:])
-    if(state=="inst"):
-      Inst_List.append([ADDR, CODE, ASM])
-    elif(state=="data"):
-      Data_List.append([ADDR, CODE, ASM])
+
+  # print line
+  # print state
+  if(_is_hex(line[0])):
+    ADDR = int(line[0],16)
+    for DATA in line[1:]:
+      if(DATA[0]!="."):
+        ADDR_str = "{0:08x}".format(ADDR)
+        DATA = changeEndian(DATA)
+        Data_List.append([ADDR_str, DATA, ".data"])
+        ADDR += 4
+# print(Data_List)
 
 def write_txt(Inst_List, file_name):
   file = open(file_name, 'w')
@@ -49,6 +52,5 @@ def write_txt(Inst_List, file_name):
 
   file.close()
 
-write_txt(Inst_List, './inst.txt')
-# write_txt(Data_List, './data.txt')
+write_txt(Data_List, './data.txt')
 

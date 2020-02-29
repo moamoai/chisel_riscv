@@ -17,9 +17,14 @@ do
   ln -s ${PAT_DIR}/${test}.dump    ./pattern.dump
   python tools/gen_expect.py > gen_expect.log
   python tools/gen_inst.py   > gen_inst.log 
+  set +e
+  riscv64-unknown-elf-objdump -s -j .data  ${PAT_DIR}/${test} > data.dump
+  set -e
+  python tools/gen_data.py
  
-  make riscv-test | tee logs/run_${test}.log
-  RESULT=`grep -e "OK" -e "NG" -e "ERROR" logs/run_${test}.log`
-  TIME=`grep -e "Total time" logs/run_${test}.log`
-  echo "${test}: ${RESULT} ${TIME}"  >> result.log
+  LOG_FILE=logs/run_${test}.log
+  make riscv-test | tee ${LOG_FILE}
+  RESULT=`grep -e "OK" -e "NG" -e "ERROR" ${LOG_FILE}`
+  TIME=`grep -e "Total time" ${LOG_FILE}`
+  echo "${LOG_FILE}: ${RESULT} ${TIME}"  >> result.log
 done
