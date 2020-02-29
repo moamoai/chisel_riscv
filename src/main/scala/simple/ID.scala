@@ -170,8 +170,8 @@ class ID extends Module {
     jump_addr  := PC + imm_B
     when(((func3===0.U) && (d_rs1 ===d_rs2))|| // BEQ
          ((func3===1.U) && (d_rs1 != d_rs2))|| // BNE
-         ((func3===4.U) && (d_rs1.asSInt < d_rs2.asSInt))|| // BLT
-         ((func3===5.U) && (d_rs1 >= d_rs2))|| // BGE
+         ((func3===4.U) && (d_rs1.asSInt <  d_rs2.asSInt))|| // BLT
+         ((func3===5.U) && (d_rs1.asSInt >= d_rs2.asSInt))|| // BGE
          ((func3===6.U) && (d_rs1  < d_rs2))|| // BLTU
          ((func3===7.U) && (d_rs1 >= d_rs2)))  // BGEU
     {

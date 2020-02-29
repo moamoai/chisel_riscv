@@ -44,6 +44,7 @@ for line in open("./run_spike.log"):
       | ((int(op[9:11],16)&0x7F) == int("0f",16)) # fence
       | (op[8:11] == "033") # [tmp?] add     zero,
       | (op[8:11] == "013") # [tmp?] addi    zero,
+      | (op[8:11] == "037") # [tmp?] lui     zero,
       ): 
       # state = "get_inst"
       # continue
@@ -54,7 +55,7 @@ for line in open("./run_spike.log"):
 #      break
 
     regx = line[3]
-    if (op[9:12] == "23)"):# sw(0x13)
+    if ((int(op[9:11],16)&0x7F) == int("23", 16)):# sw/sb/sh(0x23)
       reg    = "00"
       expect = "0x00000000"
     elif(len(regx)==3): # x10,x11..

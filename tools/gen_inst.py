@@ -13,6 +13,8 @@ Start_ADDR = "0xffffffff80000000"
 state = "init"
 for line in open("./pattern.dump"):
   line = line.rstrip()
+  if(line == "Disassembly of section .data:"):
+    break
   line = line.split()
 #   print state
   if(line == []):
