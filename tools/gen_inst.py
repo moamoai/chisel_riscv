@@ -1,17 +1,25 @@
 import sys
 
+def _is_hex(val):
+  try:
+    int(val, 16)
+    return True
+  except ValueError, e:
+    return False
+
 Inst_List = [] # [[ADDR, CODE, ASM] , ..]
 
 Start_ADDR = "0xffffffff80000000"
 state = "init"
-for line in open("../riscv_testpattern/hello.dump"):
+for line in open("./pattern.dump"):
   line = line.rstrip()
   line = line.split()
 #   print state
   if(line == []):
     continue
   if((line[0][-1] == ":")&
-     (line[0]     != "hello.elf:") ):
+      _is_hex(line[0][0:8])):
+     #(line[0]     != "hello.elf:") ):
      ADDR = line[0].replace(":","")
      CODE = line[1]
      ASM    = " ".join(line[2:])

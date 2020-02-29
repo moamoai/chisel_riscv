@@ -6,7 +6,7 @@ ExpectReg = [] # [[x0, value]
 
 Start_ADDR = "0xffffffff80000000"
 state = "init"
-for line in open("../riscv_testpattern/run.log"):
+for line in open("./run_spike.log"):
   line = line.rstrip()
   line = line.split()
   # print state
@@ -28,21 +28,29 @@ for line in open("../riscv_testpattern/run.log"):
       break 
   elif(state=="get_expect"):
     op    = line[2]
-    if(op == "(0x00000013)"):   # NOP
+    if(op =="exception"): # ecal/exception
+      op = "(0x00000000)"
+      line = ["0", "0x00000000", "(0x00000000)", "0", "0", "0x00000000"]
+    elif(op == "(0x00000013)"):   # NOP
       line.append("0")
       line.append("0")
       line.append("0x00000000")
-    elif((op == "(0x0040006f)") # j pc + 0x4
-      |(op == "(0x00008067)")   #  ret
-      |(op == "(0x0000006f)")   # j pc + 0x0
+    elif(
+        ((int(op[9:11],16)&0x7F) == int("6f",16)) # j
+      | ((int(op[9:11],16)&0x7F) == int("67",16)) # ret
+      | ((int(op[9:11],16)&0x7F) == int("63",16)) # bra
+      | ((int(op[9:11],16)&0x7F) == int("73",16)) # csrw
+      | ((int(op[9:11],16)&0x7F) == int("73",16)) # csrw
+      | ((int(op[9:11],16)&0x7F) == int("0f",16)) # fence
+      | (op[8:11] == "033") # [tmp?] add     zero,
       ): 
       # state = "get_inst"
       # continue
       line.append("0")
       line.append("0")
       line.append("0x00000000")
-    elif(op=="(0x00532023)"): # Fin
-      break
+#    elif(op=="(0x00532023)"): # Fin
+#      break
 
     regx = line[3]
     if (op[9:12] == "23)"):# sw(0x13)
