@@ -10,16 +10,16 @@ SBT = sbt
 
 
 riscv:
-	$(SBT) "runMain simple.RiscVMain"
+	$(SBT) "runMain riscv.RiscVMain"
 
 riscv-test:
-	$(SBT) "test:runMain simple.RiscVTester --backend-name verilator"
+	$(SBT) "test:runMain riscv.RiscVTester --backend-name verilator"
 
 GTKWAVE = /Applications/gtkwave.app/Contents/Resources/bin/gtkwave
 
 view:
-	$(GTKWAVE) ./test_run_dir/simple.RiscVTester1912282513/RiscV.gtkw
-	# $(GTKWAVE) ./test_run_dir/simple.RiscVTester1912282511/RiscV.gtkw
+	$(GTKWAVE) ./test_run_dir/RiscV.gtkw
+	# $(GTKWAVE) ./test_run_dir/riscv.RiscVTester1912282511/RiscV.gtkw
 
 # clean everything (including IntelliJ project settings)
 
